@@ -1,3 +1,4 @@
 # Python_Minecraft
 Basic Minecraft Game with Ability to mine and stack blocks
-![image](https://github.com/GH0STH4CKER/Python_Minecraft/assets/62290930/76229e21-2f7f-424c-913a-963cd5367c43)
+![image](https://github.com/GH0STH4CKER/Python_Minecraft/assets/62290930/bfd95951-733e-450f-adc9-387220e76e47)
+
