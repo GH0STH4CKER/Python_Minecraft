@@ -1,14 +1,15 @@
 from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina import *
-import ursina
+import ursina,time
 
 app = Ursina()
-
 player_enabled = True
 p_key_held = False
-world_size = 25 # x and y
+original_world = []
+world_size = 20 # x and y
 world_depth = 5 # z
 
+#camera.orthographic = True
 grass_texture = load_texture('assets/grass_block2.png')
 stone_texture = load_texture('assets/stone_block2.png')
 wood_texture = load_texture('assets/wood_block.png')
@@ -22,7 +23,28 @@ block_pick = 1
 window.fps_counter.enabled = True
 window.exit_button.visible = True
 
+def show_popup(text):
+    global popup_text
+    popup_text = Text(text=text, origin=(0, 0), scale=2,color=color.black)
+    popup_text.x = -popup_text.width / 2
+    popup_text.y = -popup_text.height / 2
+    
+def hide_popup():
+    global popup_text
+    destroy(popup_text)
 
+def reset_game():
+    show_popup("Recreated World blocks !")
+    
+    for voxel in scene.entities:
+        if isinstance(voxel, Voxel):
+            voxel.disable()  # Disable current voxels
+
+    for x, y, z, texture in original_world:
+        voxel = Voxel(position=(x, y, z), texture=texture)  # Recreate voxels
+
+    player.position = (12, 4, 12)  # Reset player's position
+    invoke(hide_popup, delay=4)  # Hide popup after 3 seconds
 
 def toggle_player_visibility():
     global player_enabled
@@ -33,11 +55,18 @@ def update(self):
     global block_pick
     global p_key_held
     
+    if player.y < -10:  # Check if player fell off the edge
+        reset_game()
+
+    if held_keys['r']:  # Press 'r' key to reset the game
+        reset_game()
+
     if held_keys['p'] and not p_key_held:
         toggle_player_visibility()
         p_key_held = True
     elif not held_keys['p'] and p_key_held:
         p_key_held = False
+
 
     if held_keys['left mouse'] or held_keys['right mouse']:
         hand.active()
@@ -87,7 +116,8 @@ class Voxel(Button):
             if key == 'left mouse down':
                 punch_sound.play()
                 destroy(self)
-#ursina.EditorCamera()
+
+    
 class NonInteractiveButton(Button):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -159,14 +189,16 @@ class Hand(Entity):
 for z in range(world_size):
     for x in range(world_size):
         for y in range(world_depth):
-            if y == 4: # Top grass layer
-                voxel = Voxel(position=(x, y, z), texture=grass_texture)  # Create ground layer
-            elif y == 0:  # Bottom stone layer
+            if y == 4:
+                voxel = Voxel(position=(x, y, z), texture=grass_texture)
+                original_world.append((x, y, z, grass_texture))
+            elif y == 0:
                 voxel = Voxel(position=(x, y, z), texture=stone_texture)
-            else:  # Middle other dirt layer
+                original_world.append((x, y, z, stone_texture))
+            else:
                 voxel = Voxel(position=(x, y, z), texture=dirt_texture)
-
-player = FirstPersonController(position=(12,12,5))
+                original_world.append((x, y, z, dirt_texture))
+player = FirstPersonController(position=(12,15,12))
 table = TableUI()
 sky = Sky()
 hand = Hand()
